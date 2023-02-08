@@ -72,8 +72,13 @@ export type ApiResponse<T> = (
     }
 );
 
-export function promisify(arg: unknown): unknown {
-    return null;
+export function promisify<T>(request:(callback: (response: ApiResponse<T>) => void) => void):() => Promise<T> {
+    return () => new Promise((resolve, reject)=>{
+        request(response =>{
+            if(response.status === 'success') resolve(response.data)
+            else reject(RangeError)
+        })
+    })
 }
 
 const oldApi = {
