@@ -62,7 +62,7 @@ function isPowerUser(person: Person): person is PowerUser {
 }
 
 export function logPerson(person: Person) {
-    let additionalInformation: string = '';
+    let additionalInformation = '';
     if (isAdmin(person)) {
         additionalInformation = person.role;
     }
