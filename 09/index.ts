@@ -69,18 +69,22 @@ type UsersApiResponse = ApiResponse<User[]>
 type CurrentServerTimeApiResponse = ApiResponse<number>
 type CoffeeMachineApiResponse = ApiResponse<number>
 
-export function requestAdmins(callback: (response: AdminsApiResponse) => void) {
-    callback({
-        status: 'success',
-        data: admins
-    });
+export function requestAdmins(): Promise<ApiResponse<Person[]>> {
+    return new Promise((resolve, reject)=>{
+        resolve({
+            status: 'success',
+            data: admins
+        })
+    })
 }
 
-export function requestUsers(callback: (response: UsersApiResponse) => void) {
-    callback({
-        status: 'success',
-        data: users
-    });
+export function requestUsers(): Promise<ApiResponse<Person[]>> {
+    return new Promise((resolve, reject) =>{
+        resolve({
+            status: 'success',
+            data: users
+        })
+    })
 }
 
 export function requestCurrentServerTime(callback: (response: CurrentServerTimeApiResponse) => void) {
@@ -104,49 +108,46 @@ function logPerson(person: Person) {
 }
 
 function startTheApp(callback: (error: Error | null) => void) {
-    requestAdmins((adminsResponse) => {
-        console.log('Admins:');
-        if (adminsResponse.status === 'success') {
-            adminsResponse.data.forEach(logPerson);
-        } else {
-            return callback(new Error(adminsResponse.error));
-        }
-
-        console.log();
-
-        requestUsers((usersResponse) => {
-            console.log('Users:');
-            if (usersResponse.status === 'success') {
-                usersResponse.data.forEach(logPerson);
-            } else {
-                return callback(new Error(usersResponse.error));
-            }
-
+    requestAdmins()
+        .then(adminsResponse =>{
+            console.log('Admins:');
+            if (adminsResponse.status === 'success')
+                adminsResponse.data.forEach(logPerson)
             console.log();
-
-            requestCurrentServerTime((serverTimeResponse) => {
-                console.log('Server time:');
-                if (serverTimeResponse.status === 'success') {
-                    console.log(`   ${new Date(serverTimeResponse.data).toLocaleString()}`);
+            return requestUsers()
+        })
+        .then(usersResponse=>{
+            console.log('Users:');
+                if (usersResponse.status === 'success') {
+                    usersResponse.data.forEach(logPerson);
                 } else {
-                    return callback(new Error(serverTimeResponse.error));
+                    return callback(new Error(usersResponse.error));
                 }
 
                 console.log();
 
-                requestCoffeeMachineQueueLength((coffeeMachineQueueLengthResponse) => {
-                    console.log('Coffee machine queue length:');
-                    if (coffeeMachineQueueLengthResponse.status === 'success') {
-                        console.log(`   ${coffeeMachineQueueLengthResponse.data}`);
+                requestCurrentServerTime((serverTimeResponse) => {
+                    console.log('Server time:');
+                    if (serverTimeResponse.status === 'success') {
+                        console.log(`   ${new Date(serverTimeResponse.data).toLocaleString()}`);
                     } else {
-                        return callback(new Error(coffeeMachineQueueLengthResponse.error));
+                        return callback(new Error(serverTimeResponse.error));
                     }
 
-                    callback(null);
+                    console.log();
+
+                    requestCoffeeMachineQueueLength((coffeeMachineQueueLengthResponse) => {
+                        console.log('Coffee machine queue length:');
+                        if (coffeeMachineQueueLengthResponse.status === 'success') {
+                            console.log(`   ${coffeeMachineQueueLengthResponse.data}`);
+                        } else {
+                            return callback(new Error(coffeeMachineQueueLengthResponse.error));
+                        }
+
+                        callback(null);
+                    });
                 });
-            });
         });
-    });
 }
 
 startTheApp((e: Error | null) => {
